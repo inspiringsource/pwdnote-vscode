@@ -1,0 +1,88 @@
+{
+  "name": "pwdnote-vscode",
+  "displayName": "pwdNote",
+  "description": "VS Code integration for pwdnote encrypted project notes.",
+  "version": "0.0.1",
+  "publisher": "inspiringsource",
+  "license": "MIT",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/inspiringsource/pwdnote-vscode"
+  },
+  "homepage": "https://inspiringsource.github.io/pwdnote/",
+  "bugs": {
+    "url": "https://github.com/inspiringsource/pwdnote/issues"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "pwdnote",
+    "notes",
+    "encrypted notes",
+    "project notes",
+    "cli",
+    "developer tools"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "pwdnote.openNote",
+        "title": "Open Project Note",
+        "category": "pwdnote"
+      },
+      {
+        "command": "pwdnote.initNote",
+        "title": "Initialize Project Note",
+        "category": "pwdnote"
+      },
+      {
+        "command": "pwdnote.addQuickNote",
+        "title": "Add Quick Note",
+        "category": "pwdnote"
+      },
+      {
+        "command": "pwdnote.showStatus",
+        "title": "Show Status",
+        "category": "pwdnote"
+      }
+    ],
+    "customEditors": [
+      {
+        "viewType": "pwdnote.encryptedNote",
+        "displayName": "pwdNote (encrypted)",
+        "selector": [
+          {
+            "filenamePattern": "*.pwdnote.enc"
+          }
+        ],
+        "priority": "default"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "pretest": "npm run compile && npm run lint",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^20.x",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "@vscode/test-cli": "^0.0.9",
+    "@vscode/test-electron": "^2.3.9",
+    "eslint": "^8.57.0",
+    "typescript": "^5.4.0"
+  }
+}
