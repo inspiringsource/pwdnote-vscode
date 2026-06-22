@@ -5,6 +5,3 @@ dist/
 .vscode-test/
 *.log
 
-# pwdnote artifacts must never be committed from this repo
-.pwdnote.enc
-.pwdnote/

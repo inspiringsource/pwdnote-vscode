@@ -11,20 +11,25 @@ your workspace folder and surfaces the results.
 
 ## Requirements
 
-This extension **requires the pwdnote CLI** to be installed and available on your
-`PATH`.
+This extension **requires the pwdnote CLI version 0.3.0 or newer** to be
+installed and available on your `PATH`. The 0.3.0 release adds the
+non-interactive `read` / `write --stdin` commands the extension drives.
 
 ```sh
+# install
 uv tool install pwdnote
+
+# update an existing install to 0.3.0+
+uv tool upgrade pwdnote
 ```
 
-On activation the extension checks for `pwdnote` in `PATH`. If it is missing you
-will see:
+On activation the extension runs `pwdnote --version`. If the CLI is missing or
+older than 0.3.0 you will see:
 
-> pwdnote CLI is required.
+> pwdnote CLI 0.3.0 or newer is required.
 
-…along with the install command above (with a one-click "copy" action). The
-extension does **not** attempt to install the CLI automatically.
+…with one-click actions to copy the install and upgrade commands. The extension
+does **not** attempt to install or upgrade the CLI automatically.
 
 ## Features
 
@@ -32,44 +37,51 @@ Available from the Command Palette (all prefixed with **pwdnote:**):
 
 | Command | What it does | CLI used |
 | --- | --- | --- |
+| **pwdnote: Open Project Note** | Open the decrypted note in an editable, in-memory editor. Saving re-encrypts via the CLI. | `pwdnote read` / `pwdnote write --stdin --create` |
 | **pwdnote: Initialize Project Note** | Create the encrypted project note in the current workspace. | `pwdnote init` |
 | **pwdnote: Add Quick Note** | Prompt for a line of text and append it to the note. | `pwdnote add "<text>"` |
 | **pwdnote: Show Status** | Show the project root, note file, and encryption status in the **pwdnote** output channel. | `pwdnote status` |
-| **pwdnote: Open Project Note** | Open the decrypted note in an in-memory editor. | `pwdnote read` *(see limitations)* |
 
 All commands run with the workspace folder as the working directory (the folder
 of the active editor, falling back to the first workspace folder), because
 pwdnote notes are project-local.
 
-There is also groundwork for a **custom editor** so that, in the future, opening
-a `.pwdnote.enc` file shows the decrypted note instead of ciphertext. Today this
-editor is a read-only placeholder (see limitations).
+### Read / edit / save flow
+
+Opening the project note (via the command, or by clicking a `.pwdnote.enc` file)
+shows the **decrypted** note in a normal editor tab:
+
+1. The content is fetched with `pwdnote read` and held only in VS Code's
+   in-memory text model — never written to disk as plaintext.
+2. Edit it like any Markdown file.
+3. **Save** (Ctrl/Cmd+S) pipes the current text to `pwdnote write --stdin
+   --create`, which re-encrypts the `.pwdnote.enc` file. A small **"Saved"**
+   status-bar message confirms success.
+
+Clicking a `*.pwdnote.enc` file opens this decrypted view instead of showing
+ciphertext.
 
 ## Current limitations
 
-These depend on CLI features that the installed pwdnote version does not expose
-yet:
+- **One note per project root.** pwdnote stores a single `.pwdnote.enc` per
+  project; the extension exposes that one note.
+- **No conflict detection across processes.** If you also edit the note from a
+  terminal (`pwdnote edit`) while it is open in VS Code, the last save wins.
+- The decrypted view is a virtual document (scheme `pwdnote:`); it is not a file
+  on disk, so "Reveal in Explorer" and similar file operations do not apply to
+  it. The encrypted `.pwdnote.enc` file remains the real artifact.
 
-- **Open Project Note** needs a non-interactive `pwdnote read` that prints the
-  decrypted note to stdout. If the installed CLI does not advertise `read`, the
-  command explains that *"the installed pwdnote CLI version does not support VS
-  Code integration yet"* rather than working around encryption.
-- **Editing from VS Code** needs a non-interactive write path
-  (e.g. `pwdnote write --stdin`). Until then, edit with `pwdnote edit` in a
-  terminal.
-- The `.pwdnote.enc` **custom editor** is read-only groundwork. It shows the
-  decrypted note only when `pwdnote read` exists; otherwise it shows a
-  placeholder. It never decrypts the file itself.
-
-See [DEVELOPMENT.md](./DEVELOPMENT.md) for the exact CLI commands the extension
-needs next.
+See [DEVELOPMENT.md](./DEVELOPMENT.md) for architecture details.
 
 ## Security model
 
 - The extension **never** reimplements encryption — the CLI is the only engine.
+- The extension **never** reads or writes the `.pwdnote.enc` bytes itself; all
+  decryption/encryption goes through `pwdnote read` and `pwdnote write --stdin`.
 - The extension **never** stores secrets in VS Code settings.
-- Decrypted content is shown only in **untitled / in-memory** documents and
-  webviews; it is never written to disk by the extension.
+- Decrypted content lives only in VS Code's **in-memory** text model and is
+  streamed to the CLI over stdin; it is never written to disk by the extension
+  and never placed in a temporary plaintext file.
 - The **pwdnote** output channel logs command execution and errors only — never
   decrypted note content, never the text of a quick note, never key material.
 - Key management stays entirely with the local pwdnote CLI.

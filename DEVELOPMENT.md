@@ -9,70 +9,74 @@ as `cwd`.
 
 ```
 src/
-  extension.ts            Activation, command + custom-editor registration, CLI check
-  cli.ts                  execFile wrapper, PATH/capability detection, cwd resolution
-  log.ts                  The "pwdnote" output channel (errors/diagnostics only)
+  extension.ts                Activation, command + provider registration, version check
+  cli.ts                      execFile/stdin wrapper, version detection + gating, cwd resolution
+  log.ts                      The "pwdnote" output channel (errors/diagnostics only)
+  noteFileSystemProvider.ts   Virtual `pwdnote:` FS bridging the editor to read/write
+  encryptedNoteEditor.ts      Custom editor for *.pwdnote.enc (redirects to decrypted view)
   commands/
-    initNote.ts           pwdnote init
-    addQuickNote.ts       pwdnote add "<text>"
-    showStatus.ts         pwdnote status
-    openNote.ts           pwdnote read  (capability-gated)
-  encryptedNoteEditor.ts  Read-only custom editor groundwork for *.pwdnote.enc
+    initNote.ts               pwdnote init
+    addQuickNote.ts           pwdnote add "<text>"
+    showStatus.ts             pwdnote status
+    openNote.ts               opens the decrypted virtual document
   test/
-    extension.test.ts     Smoke tests (commands + manifest)
+    extension.test.ts         Smoke tests (commands + manifest + version gate)
 ```
 
-## CLI capability detection
+## Read / edit / save via a virtual filesystem
 
-`getCliCommands()` parses `pwdnote --help` to learn which subcommands the
-installed CLI advertises. Commands that depend on a missing subcommand degrade
-to an explanatory message instead of failing or hacking around encryption.
+The decrypted note is exposed through a `FileSystemProvider` registered for the
+`pwdnote:` scheme (`noteFileSystemProvider.ts`). A document opened under this
+scheme behaves like a normal editable text file:
 
-## Status of CLI integration (as observed)
+- `readFile`  → `pwdnote read` (decrypt to stdout). A non-zero exit (no note
+  yet) yields an empty buffer the user can populate.
+- `writeFile` → `pwdnote write --stdin --create` (re-encrypt from stdin). The
+  `--create` flag is idempotent — it creates the note when missing and replaces
+  it when present — so the provider never has to stat or touch the `.pwdnote.enc`
+  bytes. On success it flashes a transient **"Saved"** status-bar message.
 
-The currently installed CLI exposes:
+The plaintext therefore exists only in VS Code's in-memory text model and is
+streamed to the CLI over stdin. Nothing plaintext is written to disk.
 
-```
-init  edit  add  status  gitignore  config
-```
+The virtual URI is anchored at the real project root (`pwdnote root`) and ends in
+`note.md` so VS Code selects Markdown. The CLI working directory is recovered as
+the URI's parent directory.
 
-Implemented against existing commands:
+`encryptedNoteEditor.ts` registers a custom editor for `*.pwdnote.enc`. When such
+a file is opened it redirects to the decrypted virtual document in the same
+editor group and disposes its placeholder panel — so clicking the encrypted file
+shows the editable decrypted note. If the CLI is missing/too old it shows an
+explanatory page instead.
 
+## Version gating
+
+`getCliVersion()` parses `pwdnote --version`; `meetsMinVersion()` enforces the
+0.3.0 floor. `ensureCliReady()` runs before every read/edit/save flow (and on
+activation) and shows the *"pwdnote CLI 0.3.0 or newer is required."* message,
+with copy actions for `uv tool install pwdnote` and `uv tool upgrade pwdnote`,
+when the requirement is not met.
+
+## CLI integration status
+
+Built against pwdnote **0.3.0** (`init`, `edit`, `add`, `status`, `gitignore`,
+`read`, `write`, `root`, `note-path`, `config`):
+
+- [x] `pwdnote: Open Project Note` → `pwdnote read` + `pwdnote write --stdin --create`
+- [x] Click `.pwdnote.enc` → decrypted, editable view
 - [x] `pwdnote: Initialize Project Note` → `pwdnote init`
 - [x] `pwdnote: Add Quick Note` → `pwdnote add "<text>"`
 - [x] `pwdnote: Show Status` → `pwdnote status`
-
-Blocked on missing CLI commands (implemented but capability-gated):
-
-- [ ] `pwdnote: Open Project Note` needs **`pwdnote read`** — print the
-      decrypted note to stdout, non-interactively, exit 0 on success.
-- [ ] Editing / saving from VS Code needs **`pwdnote write --stdin`** (or
-      equivalent) — read new note contents from stdin and re-encrypt in place,
-      non-interactively.
-- [ ] The `.pwdnote.enc` custom editor becomes a real decrypted view once
-      `pwdnote read` exists; a writable custom editor additionally needs the
-      stdin write path above.
-
-### Requested CLI additions (for the pwdnote project)
-
-```
-pwdnote read              # write decrypted note to stdout; exit non-zero on error
-pwdnote write --stdin     # replace note contents from stdin, then re-encrypt
-```
-
-Both must run without launching `$EDITOR` or prompting interactively so the
-extension can drive them. Until they land, do **not** add a TypeScript
-decrypt/encrypt path — that would fork the format and the security model.
 
 ## Manual smoke test
 
 1. `npm install && npm run compile`
 2. Press **F5** to open the Extension Development Host.
-3. Open a folder with `pwdnote` on `PATH`.
-4. Run **pwdnote: Show Status** — output appears in the *pwdnote* channel.
-5. Run **pwdnote: Initialize Project Note**, then **Add Quick Note**.
-6. Run **pwdnote: Open Project Note** — with today's CLI it reports that the CLI
-   lacks VS Code integration (`read`).
+3. Open a folder with `pwdnote` (>= 0.3.0) on `PATH`.
+4. Run **pwdnote: Open Project Note** — type some text and **save**; a "Saved"
+   message appears and `.pwdnote.enc` is created/updated.
+5. Close the tab, then click the `.pwdnote.enc` file — it reopens decrypted.
+6. Run **pwdnote: Show Status**, **Add Quick Note**, **Initialize Project Note**.
 
 ## Notes / decisions
 

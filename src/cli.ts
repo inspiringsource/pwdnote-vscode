@@ -5,7 +5,12 @@ import { logError } from './log';
 export const CLI_NAME = 'pwdnote';
 
 export const INSTALL_HINT = 'uv tool install pwdnote';
+export const UPGRADE_HINT = 'uv tool upgrade pwdnote';
 export const CLI_REQUIRED_MESSAGE = 'pwdnote CLI is required.';
+
+/** Minimum CLI version exposing read / write --stdin / root / note-path. */
+export const MIN_CLI_VERSION = '0.3.0';
+export const CLI_VERSION_REQUIRED_MESSAGE = 'pwdnote CLI 0.3.0 or newer is required.';
 
 export interface CliResult {
   code: number;
@@ -32,9 +37,13 @@ export class CliNotFoundError extends Error {
  *    channel. `args` may contain the plaintext of a quick note, and stdout may
  *    contain decrypted content. Callers log only sanitized summaries.
  */
-export function runPwdnote(args: string[], cwd: string): Promise<CliResult> {
+export function runPwdnote(
+  args: string[],
+  cwd: string,
+  input?: string,
+): Promise<CliResult> {
   return new Promise((resolve, reject) => {
-    execFile(
+    const child = execFile(
       CLI_NAME,
       args,
       { cwd, windowsHide: true, maxBuffer: 16 * 1024 * 1024 },
@@ -53,55 +62,91 @@ export function runPwdnote(args: string[], cwd: string): Promise<CliResult> {
         resolve({ code, stdout: stdout ?? '', stderr: stderr ?? '' });
       },
     );
+
+    // Feed stdin for commands like `write --stdin`. We always close stdin so a
+    // command that reads it gets EOF and never blocks. The piped content may be
+    // plaintext note data; it is written to the child process only and is never
+    // logged or persisted to disk by the extension.
+    if (child.stdin) {
+      if (input !== undefined) {
+        child.stdin.write(input);
+      }
+      child.stdin.end();
+    }
   });
 }
 
 /**
- * Return true if the pwdnote CLI is resolvable in PATH. Implemented by invoking
- * `pwdnote --help`, which is cheap and side-effect free.
+ * Parse the installed CLI version from `pwdnote --version`
+ * (e.g. "pwdnote 0.3.0" -> [0, 3, 0]). Returns undefined when the binary is
+ * present but the version string cannot be parsed.
  */
-export async function isCliAvailable(cwd: string): Promise<boolean> {
-  try {
-    await runPwdnote(['--help'], cwd);
-    return true;
-  } catch (err) {
-    if (err instanceof CliNotFoundError) {
+export async function getCliVersion(cwd: string): Promise<[number, number, number] | undefined> {
+  const result = await runPwdnote(['--version'], cwd);
+  const match = `${result.stdout}\n${result.stderr}`.match(/(\d+)\.(\d+)\.(\d+)/);
+  if (!match) {
+    return undefined;
+  }
+  return [Number(match[1]), Number(match[2]), Number(match[3])];
+}
+
+/** Compare a parsed version against MIN_CLI_VERSION (0.3.0). */
+export function meetsMinVersion(version: [number, number, number]): boolean {
+  const min = MIN_CLI_VERSION.split('.').map(Number);
+  for (let i = 0; i < 3; i++) {
+    if (version[i] > min[i]) {
+      return true;
+    }
+    if (version[i] < min[i]) {
       return false;
     }
-    // Any other error still means the binary was found and executed.
-    return true;
   }
+  return true; // equal
 }
 
 /**
- * Parse the set of top-level subcommands the installed CLI advertises in its
- * `--help` output (e.g. "init", "add", "status"). Used for capability detection
- * so the extension can degrade gracefully when, for example, `read` is missing.
+ * Ensure the CLI is installed AND new enough for the read/write integration.
+ * Shows the appropriate message (with install + upgrade hints) and returns false
+ * when the requirement is not met. Use before any read/edit/save flow.
  */
-export async function getCliCommands(cwd: string): Promise<Set<string>> {
-  const result = await runPwdnote(['--help'], cwd);
-  const text = `${result.stdout}\n${result.stderr}`;
-  const commands = new Set<string>();
-
-  // The help renders a "Commands" box of the form:
-  //   │ init       Create an encrypted project note. │
-  // Match the first word on each line that follows the Commands header.
-  let inCommands = false;
-  for (const rawLine of text.split('\n')) {
-    const line = rawLine.replace(/[│|╭╮╰╯─]/g, ' ').trim();
-    if (/^Commands\b/i.test(line)) {
-      inCommands = true;
-      continue;
+export async function ensureCliReady(cwd: string): Promise<boolean> {
+  let version: [number, number, number] | undefined;
+  try {
+    version = await getCliVersion(cwd);
+  } catch (err) {
+    if (err instanceof CliNotFoundError) {
+      await showCliVersionRequired();
+      return false;
     }
-    if (!inCommands) {
-      continue;
-    }
-    const match = line.match(/^([a-z][a-z0-9-]*)\b/);
-    if (match) {
-      commands.add(match[1]);
-    }
+    throw err;
   }
-  return commands;
+
+  if (!version || !meetsMinVersion(version)) {
+    logError(
+      `pwdnote version ${version ? version.join('.') : 'unknown'} is below required ${MIN_CLI_VERSION}`,
+    );
+    await showCliVersionRequired();
+    return false;
+  }
+  return true;
+}
+
+/** Show the "0.3.0 or newer required" message with install + upgrade hints. */
+export async function showCliVersionRequired(): Promise<void> {
+  const copyInstall = 'Copy install command';
+  const copyUpgrade = 'Copy upgrade command';
+  const choice = await vscode.window.showErrorMessage(
+    `${CLI_VERSION_REQUIRED_MESSAGE}  Install: ${INSTALL_HINT}   •   Update: ${UPGRADE_HINT}`,
+    copyInstall,
+    copyUpgrade,
+  );
+  if (choice === copyInstall) {
+    await vscode.env.clipboard.writeText(INSTALL_HINT);
+    void vscode.window.showInformationMessage('Copied: ' + INSTALL_HINT);
+  } else if (choice === copyUpgrade) {
+    await vscode.env.clipboard.writeText(UPGRADE_HINT);
+    void vscode.window.showInformationMessage('Copied: ' + UPGRADE_HINT);
+  }
 }
 
 /**

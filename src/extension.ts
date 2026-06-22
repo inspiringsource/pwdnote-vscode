@@ -1,15 +1,29 @@
 import * as vscode from 'vscode';
-import { getWorkspaceCwd, isCliAvailable, showCliRequired } from './cli';
+import {
+  getCliVersion,
+  getWorkspaceCwd,
+  meetsMinVersion,
+  showCliVersionRequired,
+} from './cli';
 import { addQuickNote } from './commands/addQuickNote';
 import { initNote } from './commands/initNote';
 import { openNote } from './commands/openNote';
 import { showStatus } from './commands/showStatus';
 import { EncryptedNoteEditorProvider } from './encryptedNoteEditor';
 import { initLog, logInfo } from './log';
+import { NoteFileSystemProvider, PWDNOTE_SCHEME } from './noteFileSystemProvider';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   initLog(context);
   logInfo('pwdnote extension activated.');
+
+  // Virtual filesystem backing the decrypted, editable note view. readFile ->
+  // `pwdnote read`; writeFile -> `pwdnote write --stdin --create`.
+  context.subscriptions.push(
+    vscode.workspace.registerFileSystemProvider(PWDNOTE_SCHEME, new NoteFileSystemProvider(), {
+      isCaseSensitive: true,
+    }),
+  );
 
   context.subscriptions.push(
     vscode.commands.registerCommand('pwdnote.openNote', openNote),
@@ -18,23 +32,26 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.commands.registerCommand('pwdnote.showStatus', showStatus),
   );
 
-  // Custom editor groundwork for `*.pwdnote.enc`. Read-only placeholder today;
-  // see EncryptedNoteEditorProvider for the upgrade path.
+  // Clicking a `*.pwdnote.enc` file opens the decrypted note via this editor.
   context.subscriptions.push(EncryptedNoteEditorProvider.register());
 
-  // One-time, non-blocking CLI presence check on activation.
+  // Non-blocking CLI version check on activation.
   void checkCliOnActivation();
 }
 
 async function checkCliOnActivation(): Promise<void> {
-  // Probe from a workspace folder if there is one, otherwise the home/default
-  // cwd is fine just to confirm the binary resolves in PATH.
   const cwd = getWorkspaceCwd() ?? process.cwd();
-  const available = await isCliAvailable(cwd);
-  if (!available) {
-    await showCliRequired();
-  } else {
-    logInfo('pwdnote CLI detected in PATH.');
+  try {
+    const version = await getCliVersion(cwd);
+    if (!version || !meetsMinVersion(version)) {
+      logInfo(`pwdnote CLI version ${version ? version.join('.') : 'unknown'} is unsupported.`);
+      await showCliVersionRequired();
+      return;
+    }
+    logInfo(`pwdnote CLI ${version.join('.')} detected.`);
+  } catch {
+    // Binary not found in PATH; prompt to install.
+    await showCliVersionRequired();
   }
 }
 
