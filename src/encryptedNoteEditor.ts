@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { ensureCliReady } from './cli';
 import { logError, logInfo } from './log';
-import { noteVirtualUri } from './noteFileSystemProvider';
+import { showNoteDocument } from './noteFileSystemProvider';
 
 /**
  * Custom editor for `*.pwdnote.enc` files.
@@ -51,16 +51,8 @@ export class EncryptedNoteEditorProvider implements vscode.CustomReadonlyEditorP
     }
 
     try {
-      const uri = await noteVirtualUri(cwd);
-      const doc = await vscode.workspace.openTextDocument(uri);
-      if (doc.languageId !== 'markdown') {
-        await vscode.languages.setTextDocumentLanguage(doc, 'markdown');
-      }
       logInfo('encryptedNoteEditor: redirecting to decrypted note view.');
-      await vscode.window.showTextDocument(doc, {
-        viewColumn: webviewPanel.viewColumn,
-        preview: false,
-      });
+      await showNoteDocument(cwd, webviewPanel.viewColumn);
       // Replace this placeholder tab with the decrypted, editable document.
       webviewPanel.dispose();
     } catch (err) {

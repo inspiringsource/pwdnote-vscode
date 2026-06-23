@@ -7,7 +7,7 @@ import {
   showCliVersionRequired,
 } from '../cli';
 import { logError, showLog } from '../log';
-import { noteVirtualUri } from '../noteFileSystemProvider';
+import { showNoteDocument } from '../noteFileSystemProvider';
 
 /**
  * `pwdnote: Open Project Note`.
@@ -29,12 +29,7 @@ export async function openNote(): Promise<void> {
   }
 
   try {
-    const uri = await noteVirtualUri(cwd);
-    const doc = await vscode.workspace.openTextDocument(uri);
-    if (doc.languageId !== 'markdown') {
-      await vscode.languages.setTextDocumentLanguage(doc, 'markdown');
-    }
-    await vscode.window.showTextDocument(doc, { preview: false });
+    await showNoteDocument(cwd);
   } catch (err) {
     if (err instanceof CliNotFoundError) {
       await showCliVersionRequired();

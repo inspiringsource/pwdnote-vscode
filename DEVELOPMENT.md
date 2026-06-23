@@ -78,8 +78,28 @@ Built against pwdnote **0.3.0** (`init`, `edit`, `add`, `status`, `gitignore`,
 5. Close the tab, then click the `.pwdnote.enc` file — it reopens decrypted.
 6. Run **pwdnote: Show Status**, **Add Quick Note**, **Initialize Project Note**.
 
+## Marketplace preparation
+
+Ready: `name`, `displayName`, `description`, `publisher`, `repository`,
+`homepage`, `bugs`, `license` + `LICENSE`, `keywords`, `categories`, `README`,
+`CHANGELOG`.
+
+Still missing before publishing (intentionally not done — do not publish yet):
+
+- **`icon`** — a 128×128 PNG referenced via `"icon"` in `package.json`. Omitted
+  because no asset exists and pointing at a missing file breaks `vsce package`.
+- **`images/`** — the README references `images/screenshot-note.png`,
+  `images/screenshot-statusbar.png`, and `images/demo.gif`. Capture and commit
+  these so the Marketplace page renders them.
+- Verify packaging with `npx vsce package` once the assets exist.
+
 ## Notes / decisions
 
+- The decrypted note's virtual URI uses the basename **"Project Notes"** (no
+  extension) so the editor tab reads "Project Notes"; Markdown mode is applied
+  explicitly in `showNoteDocument()` before the document is revealed.
+- The status bar item activates via `onStartupFinished` so it can appear before
+  any command is run, while keeping activation lightweight.
 - `package.json` `categories` is `["Other"]`. VS Code does not define a
   "Productivity" category, so adding it would fail `vsce` packaging; the
   productivity intent is captured in `keywords` instead.

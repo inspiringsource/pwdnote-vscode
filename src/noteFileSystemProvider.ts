@@ -20,21 +20,48 @@ import { logError, logInfo } from './log';
 export const PWDNOTE_SCHEME = 'pwdnote';
 
 /**
+ * Basename used for the virtual note document. It becomes the editor tab title,
+ * so it is human-friendly ("Project Notes") rather than a filename. The Markdown
+ * language mode is applied explicitly in {@link showNoteDocument}, so no file
+ * extension is needed.
+ */
+const NOTE_LABEL = 'Project Notes';
+
+/**
  * Build the stable virtual URI for the note in a given workspace directory. The
- * URI is anchored at the real project root (via `pwdnote root`) and ends in
- * `note.md` so VS Code selects the Markdown language mode. The CLI working
- * directory is recovered from the URI in {@link cwdForUri}.
+ * URI is anchored at the real project root (via `pwdnote root`) so the same note
+ * maps to one URI. The CLI working directory is recovered from the URI in
+ * {@link cwdForUri}.
  */
 export async function noteVirtualUri(cwd: string): Promise<vscode.Uri> {
   const result = await runPwdnote(['root'], cwd);
   const root = result.code === 0 && result.stdout.trim().length > 0
     ? result.stdout.trim()
     : cwd;
-  return vscode.Uri.file(path.join(root, 'note.md')).with({ scheme: PWDNOTE_SCHEME });
+  return vscode.Uri.file(path.join(root, NOTE_LABEL)).with({ scheme: PWDNOTE_SCHEME });
 }
 
 function cwdForUri(uri: vscode.Uri): string {
   return path.dirname(uri.fsPath);
+}
+
+/**
+ * Open (or focus) the decrypted note for a workspace directory, force the
+ * Markdown language mode, and reveal it. Shared by the Open Project Note command
+ * and the `.pwdnote.enc` custom editor so both behave identically.
+ */
+export async function showNoteDocument(
+  cwd: string,
+  viewColumn?: vscode.ViewColumn,
+): Promise<void> {
+  const uri = await noteVirtualUri(cwd);
+  let doc = await vscode.workspace.openTextDocument(uri);
+  if (doc.languageId !== 'markdown') {
+    // setTextDocumentLanguage may return a fresh document instance for the URI;
+    // use the returned one so syntax highlighting is active before we reveal it.
+    doc = await vscode.languages.setTextDocumentLanguage(doc, 'markdown');
+  }
+  await vscode.window.showTextDocument(doc, { preview: false, viewColumn });
 }
 
 export class NoteFileSystemProvider implements vscode.FileSystemProvider {

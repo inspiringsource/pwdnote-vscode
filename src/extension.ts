@@ -35,8 +35,35 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   // Clicking a `*.pwdnote.enc` file opens the decrypted note via this editor.
   context.subscriptions.push(EncryptedNoteEditorProvider.register());
 
+  registerStatusBarItem(context);
+
   // Non-blocking CLI version check on activation.
   void checkCliOnActivation();
+}
+
+/**
+ * Status bar shortcut to open the project note. Shown only when a workspace
+ * folder is open (notes are project-local).
+ */
+function registerStatusBarItem(context: vscode.ExtensionContext): void {
+  const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+  item.text = '📝 pwdnote';
+  item.tooltip = 'Open Project Note';
+  item.command = 'pwdnote.openNote';
+
+  const sync = () => {
+    if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
+      item.show();
+    } else {
+      item.hide();
+    }
+  };
+  sync();
+
+  context.subscriptions.push(
+    item,
+    vscode.workspace.onDidChangeWorkspaceFolders(sync),
+  );
 }
 
 async function checkCliOnActivation(): Promise<void> {

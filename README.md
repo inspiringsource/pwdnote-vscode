@@ -9,6 +9,29 @@ VS Code settings. All cryptography, key management, and the on-disk
 `.pwdnote.enc` file are owned by the CLI. The extension simply runs the CLI from
 your workspace folder and surfaces the results.
 
+> **This extension requires the pwdnote CLI.** Install the CLI first, then the
+> extension:
+>
+> ```sh
+> uv tool install pwdnote
+> ```
+
+## Screenshots
+
+<!-- Screenshot placeholder: the decrypted "Project Notes" tab in Markdown mode. -->
+![Project Notes open in the editor](images/screenshot-note.png)
+
+<!-- Screenshot placeholder: the "📝 pwdnote" status bar item. -->
+![pwdnote status bar item](images/screenshot-statusbar.png)
+
+## Demo
+
+<!-- GIF placeholder: open .pwdnote.enc -> edit -> save -> "Saved" toast. -->
+![Open, edit, and save a note](images/demo.gif)
+
+> Image assets are not committed yet — see _Marketplace preparation_ in
+> `DEVELOPMENT.md` for the shots still needed.
+
 ## Requirements
 
 This extension **requires the pwdnote CLI version 0.3.0 or newer** to be
@@ -46,10 +69,14 @@ All commands run with the workspace folder as the working directory (the folder
 of the active editor, falling back to the first workspace folder), because
 pwdnote notes are project-local.
 
+There is also a **📝 pwdnote** status bar item (shown when a folder is open);
+clicking it runs **pwdnote: Open Project Note**.
+
 ### Read / edit / save flow
 
-Opening the project note (via the command, or by clicking a `.pwdnote.enc` file)
-shows the **decrypted** note in a normal editor tab:
+Opening the project note (via the command, the status bar item, or by clicking a
+`.pwdnote.enc` file) shows the **decrypted** note in an editor tab titled
+**Project Notes**, in Markdown mode:
 
 1. The content is fetched with `pwdnote read` and held only in VS Code's
    in-memory text model — never written to disk as plaintext.
