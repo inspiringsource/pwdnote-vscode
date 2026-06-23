@@ -18,19 +18,7 @@ your workspace folder and surfaces the results.
 
 ## Screenshots
 
-<!-- Screenshot placeholder: the decrypted "Project Notes" tab in Markdown mode. -->
-![Project Notes open in the editor](images/screenshot-note.png)
-
-<!-- Screenshot placeholder: the "📝 pwdnote" status bar item. -->
-![pwdnote status bar item](images/screenshot-statusbar.png)
-
-## Demo
-
-<!-- GIF placeholder: open .pwdnote.enc -> edit -> save -> "Saved" toast. -->
-![Open, edit, and save a note](images/demo.gif)
-
-> Image assets are not committed yet — see _Marketplace preparation_ in
-> `DEVELOPMENT.md` for the shots still needed.
+Screenshots will be added before Marketplace publication.
 
 ## Requirements
 

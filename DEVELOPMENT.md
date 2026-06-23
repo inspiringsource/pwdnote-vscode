@@ -82,16 +82,14 @@ Built against pwdnote **0.3.0** (`init`, `edit`, `add`, `status`, `gitignore`,
 
 Ready: `name`, `displayName`, `description`, `publisher`, `repository`,
 `homepage`, `bugs`, `license` + `LICENSE`, `keywords`, `categories`, `README`,
-`CHANGELOG`.
+`CHANGELOG`, **`icon`** (`images/icon.png`, 128×128 PNG, bundled in the `.vsix`).
 
 Still missing before publishing (intentionally not done — do not publish yet):
 
-- **`icon`** — a 128×128 PNG referenced via `"icon"` in `package.json`. Omitted
-  because no asset exists and pointing at a missing file breaks `vsce package`.
-- **`images/`** — the README references `images/screenshot-note.png`,
-  `images/screenshot-statusbar.png`, and `images/demo.gif`. Capture and commit
-  these so the Marketplace page renders them.
-- Verify packaging with `npx vsce package` once the assets exist.
+- **Screenshots / demo GIF** — captured from the running extension. The README
+  notes "Screenshots will be added before Marketplace publication" rather than
+  linking to images that do not exist yet. Add them (and link them) before
+  publishing so the Marketplace page renders them.
 
 ## Notes / decisions
 

@@ -4,10 +4,3 @@ dist/
 *.vsix
 .vscode-test/
 *.log
-
-# Local tooling / agent settings
-.claude/
-
-# pwdnote test artifact — never ship a real encrypted note in the repo
-.pwdnote.enc
-
