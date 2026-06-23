@@ -10,3 +10,8 @@ tsconfig.json
 out/test/**
 node_modules/**
 DEVELOPMENT.md
+RELEASE_CHECKLIST.md
+.claude/**
+.pwdnote.enc
+*.vsix
+package-lock.json
