@@ -3,6 +3,13 @@
 VS Code integration for [pwdnote](https://github.com/inspiringsource/pwdnote) —
 encrypted, project-local notes for your terminal.
 
+## Demo
+
+![pwdnote VS Code demo](images/pwdnote-vscode-demo.gif)
+
+Create project notes in VS Code, save them locally, and commit only the
+encrypted `.pwdnote.enc` file.
+
 This extension is a **thin frontend** for the `pwdnote` command-line tool. It
 does not implement encryption, define its own note format, or store secrets in
 VS Code settings. All cryptography, key management, and the on-disk
