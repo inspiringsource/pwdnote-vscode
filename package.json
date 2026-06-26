@@ -1,6 +1,6 @@
 {
   "name": "pwdnote-vscode",
-  "displayName": "pwdNote",
+  "displayName": "pwdnote",
   "description": "VS Code integration for pwdnote encrypted project notes.",
   "version": "0.2.0",
   "publisher": "inspiringsource",

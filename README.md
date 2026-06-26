@@ -1,4 +1,4 @@
-# pwdNote for VS Code
+# pwdnote for VS Code
 
 VS Code integration for [pwdnote](https://github.com/inspiringsource/pwdnote) —
 encrypted, project-local notes for your terminal.
@@ -15,16 +15,19 @@ VS Code settings. All cryptography, key management, and the on-disk
 `.pwdnote.enc` file are owned by the CLI. The extension simply runs the CLI from
 your workspace folder and surfaces the results.
 
-> **This extension requires the pwdnote CLI.** Install the CLI first, then the
-> extension:
->
-> ```sh
-> uv tool install pwdnote
-> ```
+## Installation
 
-## Screenshots
+**Install the pwdnote CLI first** — this extension is a frontend for it and does
+nothing without it.
 
-Screenshots will be added before Marketplace publication.
+1. Install the CLI (requires [uv](https://docs.astral.sh/uv/)):
+
+   ```sh
+   uv tool install pwdnote
+   ```
+
+2. Install **pwdnote** from the VS Code Marketplace (or the Extensions view) and
+   make sure `pwdnote` is on your `PATH`.
 
 ## Requirements
 
