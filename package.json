@@ -2,7 +2,7 @@
   "name": "pwdnote-vscode",
   "displayName": "pwdnote",
   "description": "VS Code integration for pwdnote encrypted project notes.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "publisher": "inspiringsource",
   "license": "MIT",
   "repository": {
