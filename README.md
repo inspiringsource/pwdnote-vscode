@@ -1,17 +1,21 @@
 # pwdnote for VS Code
 
-VS Code integration for [pwdnote](https://github.com/inspiringsource/pwdnote) —
-encrypted, project-local notes for your terminal.
+[![Visual Studio Marketplace](https://vsmarketplacebadges.dev/version/inspiringsource.pwdnote-vscode.svg)](https://marketplace.visualstudio.com/items?itemName=inspiringsource.pwdnote-vscode)
+
+The official VS Code Extensions for the
+[pwdnote](https://github.com/inspiringsource/pwdnote) CLI.
+
+The extension provides a native VS Code experience for creating, opening, and
+editing encrypted project notes. All encryption and decryption is handled by the
+pwdnote CLI, ensuring both the terminal and VS Code use the same encrypted file
+format and security model.
 
 ## Requirements
 
-**pwdnote for VS Code is a frontend for the
-[pwdnote](https://github.com/inspiringsource/pwdnote) command-line tool — it
-requires the CLI and does nothing on its own.** The extension performs no
-encryption itself; it drives the installed `pwdnote` CLI for every read and
-write.
+**The pwdnote CLI must be installed first.** The extension drives the CLI for
+every read and write and will not function without it.
 
-Install the CLI **first** (requires [uv](https://docs.astral.sh/uv/)):
+Install the CLI (requires [uv](https://docs.astral.sh/uv/)):
 
 ```sh
 uv tool install pwdnote
@@ -38,12 +42,6 @@ The extension **automatically detects and uses** the `pwdnote` CLI on your
 ![pwdnote VS Code demo](images/pwdnote-vscode-demo.gif)
 
 In this demo, I create a project note directly from VS Code, add some private project context, and commit the changes to GitHub. While the note remains readable locally, only the encrypted `.pwdnote.enc` file is stored in the repository.
-
-This extension is a **thin frontend** for the `pwdnote` command-line tool. It
-does not implement encryption, define its own note format, or store secrets in
-VS Code settings. All cryptography, key management, and the on-disk
-`.pwdnote.enc` file are owned by the CLI. The extension simply runs the CLI from
-your workspace folder and surfaces the results.
 
 ## CLI version & detection
 
@@ -143,9 +141,10 @@ To watch and rebuild on change: `npm run watch`.
 
 ## Links
 
-- Source: <https://github.com/inspiringsource/pwdnote>
-- PyPI: <https://pypi.org/project/pwdnote/>
-- Docs: <https://inspiringsource.github.io/pwdnote/>
+- Marketplace: https://marketplace.visualstudio.com/items?itemName=inspiringsource.pwdnote-vscode
+- CLI: https://github.com/inspiringsource/pwdnote
+- PyPI: https://pypi.org/project/pwdnote/
+- Website: https://inspiringsource.github.io/pwdnote/
 
 ## License
 
