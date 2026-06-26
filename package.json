@@ -5,14 +5,13 @@
   "version": "0.2.0",
   "publisher": "inspiringsource",
   "license": "MIT",
-  "private": true,
   "repository": {
     "type": "git",
     "url": "https://github.com/inspiringsource/pwdnote-vscode"
   },
   "homepage": "https://inspiringsource.github.io/pwdnote/",
   "bugs": {
-    "url": "https://github.com/inspiringsource/pwdnote/issues"
+    "url": "https://github.com/inspiringsource/pwdnote-vscode/issues"
   },
   "icon": "images/icon.png",
   "engines": {
