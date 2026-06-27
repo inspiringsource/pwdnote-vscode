@@ -2,8 +2,8 @@
 
 [![Visual Studio Marketplace](https://vsmarketplacebadges.dev/version/inspiringsource.pwdnote-vscode.svg)](https://marketplace.visualstudio.com/items?itemName=inspiringsource.pwdnote-vscode)
 
-The official VS Code Extensions for the
-[pwdnote](https://github.com/inspiringsource/pwdnote) CLI.
+The official VS Code extension for the
+[`pwdnote`](https://github.com/inspiringsource/pwdnote) CLI.
 
 The extension provides a native VS Code experience for creating, opening, and
 editing encrypted project notes. All encryption and decryption is handled by the
@@ -12,8 +12,8 @@ format and security model.
 
 ## Requirements
 
-**The pwdnote CLI must be installed first.** The extension drives the CLI for
-every read and write and will not function without it.
+**The pwdnote CLI must be installed first.** The extension uses the `pwdnote`
+CLI for all encryption and decryption and will not function without it.
 
 Install the CLI (requires [uv](https://docs.astral.sh/uv/)):
 
@@ -41,7 +41,7 @@ The extension **automatically detects and uses** the `pwdnote` CLI on your
 
 ![pwdnote VS Code demo](images/pwdnote-vscode-demo.gif)
 
-In this demo, I create a project note directly from VS Code, add some private project context, and commit the changes to GitHub. While the note remains readable locally, only the encrypted `.pwdnote.enc` file is stored in the repository.
+In this demo, I create a project note directly from VS Code, add some private project context, and commit the changes to GitHub. The note is readable locally, but appears as encrypted ciphertext in the Git repository.
 
 ## CLI version & detection
 
